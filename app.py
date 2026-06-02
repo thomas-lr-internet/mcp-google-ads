@@ -925,33 +925,3 @@ async def rpc(request: Request):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", "8080")))
-
-
-# -------------------- SSE endpoint (for mcp-remote) --------------------
-from fastapi.responses import StreamingResponse
-import asyncio
-
-@app.get("/sse")
-async def sse_endpoint(request: Request):
-        """
-            SSE transport for mcp-remote clients (e.g. Claude Desktop).
-                Handles the MCP handshake over Server-Sent Events.
-                    """
-        async def event_stream():
-                    # Send endpoint event so mcp-remote knows where to POST
-                    yield "event: endpoint\ndata: /\n\n"
-                    # Keep connection alive
-                    while True:
-                                    if await request.is_disconnected():
-                                                        break
-                                                    yield ": ping\n\n"
-                                    await asyncio.sleep(15)
-
-                return StreamingResponse(
-                            event_stream(),
-                            media_type="text/event-stream",
-                            headers={
-                                            "Cache-Control": "no-cache",
-                                            "X-Accel-Buffering": "no",
-                            },
-                )
